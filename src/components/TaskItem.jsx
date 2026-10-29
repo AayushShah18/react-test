@@ -1,23 +1,23 @@
 import { useState } from "react";
+import { getCategory } from "../constants";
+import { isOverdue, todayString } from "../utils/date";
 
-function formatDue(dueDate) {
-  if (!dueDate) return null;
-  const now = new Date();
-  // Local YYYY-MM-DD (toISOString would use UTC and can be off by a day).
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const label = new Date(dueDate + "T00:00:00").toLocaleDateString(undefined, {
+function formatDue(task) {
+  if (!task.dueDate) return null;
+  const label = new Date(task.dueDate + "T00:00:00").toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   });
-  if (dueDate < today) return { label: `Overdue · ${label}`, overdue: true };
-  if (dueDate === today) return { label: "Due today", overdue: false };
+  if (isOverdue(task)) return { label: `Overdue · ${label}`, overdue: true };
+  if (task.dueDate === todayString()) return { label: "Due today", overdue: false };
   return { label: `Due ${label}`, overdue: false };
 }
 
-function TaskItem({ task, onToggle, onDelete, onEdit }) {
+function TaskItem({ task, onToggle, onDelete, onEdit, draggable, isDragging, isDropTarget, dragHandlers }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(task.title);
-  const due = formatDue(task.dueDate);
+  const due = formatDue(task);
+  const category = getCategory(task.category);
 
   function saveEdit() {
     const trimmed = draft.trim();
@@ -34,8 +34,23 @@ function TaskItem({ task, onToggle, onDelete, onEdit }) {
     }
   }
 
+  const classes = [
+    "task-item",
+    `priority-${task.priority}`,
+    task.completed && "done",
+    isDragging && "dragging",
+    isDropTarget && "drop-target",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <li className={`task-item priority-${task.priority} ${task.completed ? "done" : ""}`}>
+    <li className={classes} draggable={draggable && !isEditing} {...(draggable ? dragHandlers : {})}>
+      {draggable && (
+        <span className="drag-handle" aria-hidden="true" title="Drag to reorder">
+          ⋮⋮
+        </span>
+      )}
       <input
         type="checkbox"
         checked={task.completed}
@@ -60,8 +75,11 @@ function TaskItem({ task, onToggle, onDelete, onEdit }) {
           </span>
         )}
         <div className="task-meta">
+          <span className="badge badge-category">
+            {category.emoji} {category.label}
+          </span>
           <span className={`badge badge-${task.priority}`}>{task.priority}</span>
-          {due && <span className={due.overdue && !task.completed ? "due overdue" : "due"}>{due.label}</span>}
+          {due && <span className={due.overdue ? "due overdue" : "due"}>{due.label}</span>}
         </div>
       </div>
       <div className="task-actions">
