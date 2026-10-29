@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { CATEGORIES, DEFAULT_CATEGORY } from "../constants";
 
 function TaskForm({ onAdd }) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
+  const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
 
@@ -13,7 +15,8 @@ function TaskForm({ onAdd }) {
       setError("Please enter a task title.");
       return;
     }
-    onAdd({ title: trimmed, priority, dueDate });
+    onAdd({ title: trimmed, priority, category, dueDate });
+    // Keep the chosen category so adding several tasks of one kind is quick.
     setTitle("");
     setPriority("medium");
     setDueDate("");
@@ -34,14 +37,21 @@ function TaskForm({ onAdd }) {
         maxLength={120}
       />
       <div className="form-row">
+        <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category">
+          {CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.emoji} {c.label}
+            </option>
+          ))}
+        </select>
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
           aria-label="Priority"
         >
-          <option value="low">Low priority</option>
-          <option value="medium">Medium priority</option>
-          <option value="high">High priority</option>
+          <option value="low">🟢 Low</option>
+          <option value="medium">🟡 Medium</option>
+          <option value="high">🔴 High</option>
         </select>
         <input
           type="date"

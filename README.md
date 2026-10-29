@@ -4,15 +4,18 @@ A small, fully working task manager built with **React 19** and **Vite**. It's a
 
 ## Features
 
-- ➕ Add tasks with a **priority** (low / medium / high) and an optional **due date**
+- ➕ Add tasks with a **category** (Personal, Work, Study, Health, Shopping), a **priority** (low / medium / high) and an optional **due date**
 - ✅ Mark tasks as done, ✏️ edit them (double-click or the pencil icon), 🗑️ delete them
+- ↩️ **Undo** a delete or "Clear completed" from the pop-up message
 - 🔍 Search tasks by title
-- 🗂️ Filter by **All / Active / Completed**
-- ↕️ Sort by newest, oldest, priority or due date
-- ⏰ Overdue tasks are highlighted in red
+- 🗂️ Filter by **All / Active / Completed** and by category
+- ↕️ Sort by your own order, newest, oldest, priority or due date
+- ✋ **Drag and drop** tasks to reorder them (in "My order" sort, with a mouse)
+- ⏰ Overdue tasks are highlighted in red, with an "overdue" / "due today" summary
 - 📊 Progress bar showing how many tasks are done, plus "Clear completed"
+- ⬇️⬆️ **Export** your tasks to a JSON file and **import** them back (for example on another browser)
 - 🌙 Light / dark theme toggle
-- 💾 Tasks and theme are saved in `localStorage`, so they survive a page reload
+- 💾 Tasks, theme and sort choice are saved in `localStorage`, so they survive a page reload
 - 📱 Responsive layout that works on phones
 
 ## React concepts used
@@ -21,9 +24,13 @@ A small, fully working task manager built with **React 19** and **Vite**. It's a
 | --- | --- |
 | Components & props | `src/components/*` |
 | `useState` | Form inputs, filter/search/sort, edit mode |
-| `useEffect` | Applying the theme, saving to localStorage |
+| `useEffect` | Applying the theme, saving to localStorage, auto-hiding the toast (with cleanup) |
 | `useMemo` | Filtering and sorting the visible tasks |
+| `useCallback` | Stable `onDismiss` handler for the toast timer |
+| `useRef` | Opening the hidden file picker in `DataActions.jsx` |
 | Custom hook | `src/hooks/useLocalStorage.js` |
+| Immutable updates | Undo, drag-and-drop reordering in `utils/tasks.js` |
+| Browser APIs | HTML5 drag and drop, `Blob` download, `FileReader` import |
 | Lifting state up | All task data lives in `App.jsx` and is passed down |
 | Controlled forms | `TaskForm.jsx` |
 | Lists & keys | `TaskList.jsx` |
@@ -33,19 +40,25 @@ A small, fully working task manager built with **React 19** and **Vite**. It's a
 
 ```
 src/
-├── App.jsx                 # App state and task actions (add, toggle, edit, delete)
+├── App.jsx                 # App state and task actions (add, toggle, edit, delete, undo, import)
 ├── App.css                 # Component styles
 ├── index.css               # Theme colors (light/dark) and base styles
 ├── main.jsx                # Entry point
+├── constants.js            # Categories and priority order
 ├── hooks/
 │   └── useLocalStorage.js  # useState that persists to localStorage
+├── utils/
+│   ├── date.js             # Today / overdue helpers
+│   └── tasks.js            # Task validation and reordering helpers
 └── components/
     ├── Header.jsx          # Title and theme toggle
     ├── TaskForm.jsx        # Form to add a new task
-    ├── Stats.jsx           # Progress bar and "Clear completed"
-    ├── FilterBar.jsx       # Search, filter tabs and sort
-    ├── TaskList.jsx        # Renders the list or an empty message
-    └── TaskItem.jsx        # A single task with edit/delete
+    ├── Stats.jsx           # Progress bar, overdue / due-today summary, "Clear completed"
+    ├── FilterBar.jsx       # Search, status tabs, category filter and sort
+    ├── TaskList.jsx        # Renders the list (with drag and drop) or an empty message
+    ├── TaskItem.jsx        # A single task with edit/delete
+    ├── Toast.jsx           # Pop-up message with an Undo button
+    └── DataActions.jsx     # Export / import buttons
 ```
 
 ## Getting started
@@ -65,7 +78,7 @@ Other scripts:
 
 ## Ideas to extend it
 
-- Add categories or tags
-- Drag and drop to reorder tasks
+- Subtasks or notes on each task
+- Touch-friendly drag and drop (e.g. with `@dnd-kit`)
 - Add a backend (e.g. Firebase or a small Express API) to sync tasks across devices
 - Write tests with Vitest and React Testing Library
